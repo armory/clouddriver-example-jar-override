@@ -19,17 +19,17 @@ There are the steps to generate these files according to the jars you require
 2. After creating the base script, edit the classpath to include and remove the jars as required.
    It should be around line 91 (search for first result of `CLASSPATH=`)
 
-  a. Your new jars will be provided in `$APP_HOME/extra-lib` (e.g. mysql-connector)
+   a. Your new jars will be provided in `$APP_HOME/extra-lib` (e.g. mysql-connector)
     ```
     CLASSPATH=$APP_HOME/config:$APP_HOME/extra-lib/mysql-connector-java-8.0.23.jar:[.. ommitted ..]
     ```
 
-  b. Make sure to remove the specific jars you expect to not be there
+   b. Make sure to remove the specific jars you expect to not be there
     ```
     CLASSPATH=[.. ommitted ..]:$APP_HOME/lib/mysql-connector-java-8.0.20.jar:[.. ommitted ..]
     ```
 
-  c. Due to many factors (including k8s, security in containers, and how it detects the project root),
+   c. Due to many factors (including k8s, security in containers, and how it detects the project root),
      you will need to manually set variable APP_HOME.
      Overwrite the final definition of APP_HOME
      It should be around line 43 (search for _last_ result of `APP_HOME=`)
