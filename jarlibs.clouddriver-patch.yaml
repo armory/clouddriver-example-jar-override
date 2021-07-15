@@ -1,0 +1,41 @@
+apiVersion: spinnaker.armory.io/v1alpha2
+kind: SpinnakerService
+metadata:
+  name: spinnaker
+spec:
+  kustomize:
+    clouddriver:
+      deployment:
+        patchesStrategicMerge:
+          - |
+            template:
+              spec:
+                initContainers:
+                  - name: extra-lib-init
+                    image: 'busybox:uclibc'
+                    command:
+                      - sh
+                      - -c
+                      - |
+                        cd /opt/clouddriver/extra-lib
+                        wget 'https://repo1.maven.org/maven2/mysql/mysql-connector-java/8.0.23/mysql-connector-java-8.0.23.jar'
+                        wget 'https://repo1.maven.org/maven2/org/liquibase/liquibase-core/4.3.5/liquibase-core-4.3.5.jar'
+                    volumeMounts:
+                      - mountPath: /opt/clouddriver/extra-lib
+                        name: extra-lib-vol
+                containers:
+                  - name: clouddriver
+                    command:
+                      - sh
+                      - /opt/clouddriver/extra-bin/clouddriver
+                    volumeMounts:
+                      - mountPath: /opt/clouddriver/extra-lib
+                        name: extra-lib-vol
+                      - mountPath: /opt/clouddriver/extra-bin
+                        name: extra-bin-vol
+                volumes:
+                  - name: extra-lib-vol
+                    emptyDir: {}
+                  - name: extra-bin-vol
+                    configMap:
+                      name: clouddriver-custom-startup-script
