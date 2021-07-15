@@ -305,3 +305,18 @@ spec:
         - name: init-db
           configMap:
             name: mysql-init-db
+---
+apiVersion: v1
+data:
+  minioAccessKey: Y2hhbmdlbWU=
+  mysqlCdMigratePassword: Y2hhbmdlbWU=
+  mysqlCdPassword: Y2hhbmdlbWU=
+  mysqlF50MigratePassword: Y2hhbmdlbWU=
+  mysqlF50Password: Y2hhbmdlbWU=
+  mysqlOrcaMigratePassword: Y2hhbmdlbWU=
+  mysqlOrcaPassword: Y2hhbmdlbWU=
+  mysqlRootPassword: Y2hhbmdlbWU=
+kind: Secret
+metadata:
+  name: spin-secrets
+type: Opaque
