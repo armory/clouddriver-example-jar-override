@@ -8,34 +8,45 @@ spec:
       deployment:
         patchesStrategicMerge:
           - |
-            template:
-              spec:
-                initContainers:
-                  - name: extra-lib-init
-                    image: 'busybox:uclibc'
-                    command:
-                      - sh
-                      - -c
-                      - |
-                        cd /opt/clouddriver/extra-lib
-                        wget 'https://repo1.maven.org/maven2/mysql/mysql-connector-java/8.0.23/mysql-connector-java-8.0.23.jar'
-                        wget 'https://repo1.maven.org/maven2/org/liquibase/liquibase-core/4.3.5/liquibase-core-4.3.5.jar'
-                    volumeMounts:
-                      - mountPath: /opt/clouddriver/extra-lib
-                        name: extra-lib-vol
-                containers:
-                  - name: clouddriver
-                    command:
-                      - sh
-                      - /opt/clouddriver/extra-bin/clouddriver
-                    volumeMounts:
-                      - mountPath: /opt/clouddriver/extra-lib
-                        name: extra-lib-vol
-                      - mountPath: /opt/clouddriver/extra-bin
-                        name: extra-bin-vol
-                volumes:
-                  - name: extra-lib-vol
-                    emptyDir: {}
-                  - name: extra-bin-vol
-                    configMap:
-                      name: clouddriver-custom-startup-script
+            spec:
+              template:
+                spec:
+                  initContainers:
+                    - name: mysql-extra-lib-init
+                      image: armory/mysql-extra-lib:clouddriver-2.26.6
+                      volumeMounts:
+                        - mountPath: /target/extra-lib
+                          name: extra-lib-vol
+                  containers:
+                    - name: clouddriver
+                      volumeMounts:
+                        - mountPath: /opt/clouddriver/lib
+                          name: extra-lib-vol
+                        - mountPath: /opt/clouddriver/bin
+                          name: extra-lib-vol
+                  volumes:
+                    - name: extra-lib-vol
+                      emptyDir: {}
+    orca:
+      deployment:
+        patchesStrategicMerge:
+          - |
+            spec:
+              template:
+                spec:
+                  initContainers:
+                    - name: mysql-extra-lib-init
+                      image: armory/mysql-extra-lib:orca-2.26.12
+                      volumeMounts:
+                        - mountPath: /target/extra-lib
+                          name: extra-lib-vol
+                  containers:
+                    - name: orca
+                      volumeMounts:
+                        - mountPath: /opt/orca/lib
+                          name: extra-lib-vol
+                        - mountPath: /opt/orca/bin
+                          name: extra-lib-vol
+                  volumes:
+                    - name: extra-lib-vol
+                      emptyDir: {}

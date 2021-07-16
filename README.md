@@ -7,39 +7,75 @@ In order to customize this dependencies, this repo includes two files which will
 
 There are the steps to generate these files according to the jars you require
 
-1.  Create a base `clouddriver-custom-startup-script.cm.yaml` by doing the following commands:
-    Please keep in mind these commands refer to the latest clouddriver (2.26.6) and you will need to use the version
-    in your deployment manifest in k8s. Othewise it will fail with ClassNotFound
-  ```
-  cid=$(docker create armory/clouddriver:2.26.6)
-  docker cp "$cid:/opt/clouddriver/bin/clouddriver" ./
-  docker rm $cid
-  kubectl create cm clouddriver-custom-startup-script -o yaml --dry-run=client --from-file=$PWD/clouddriver > clouddriver-custom-startup-script.cm.yaml
-  ```
-2. After creating the base script, edit the classpath to include and remove the jars as required.
-   It should be around line 91 (search for first result of `CLASSPATH=`)
+1. Create the docker image which will contain your images.
+   e.g clouddriver and orca:
+   ```
+   docker build --build-arg basename=clouddriver --build-arg baseimage=armory/clouddriver:2.26.6 -t armory/mysql-extra-lib:clouddriver-2.26.6 .
+   docker build --build-arg basename=orca --build-arg baseimage=docker.io/armory/orca:2.26.12 -t armory/mysql-extra-lib:orca-2.26.12 .
+   ```
 
-   a. Your new jars will be provided in `$APP_HOME/extra-lib` (e.g. mysql-connector)
-    ```
-    CLASSPATH=$APP_HOME/config:$APP_HOME/extra-lib/mysql-connector-java-8.0.23.jar:[.. ommitted ..]
-    ```
+   a. Make sure to use the correct baseimage and basename parameters, compare agains the currently k8s deployment. It has to be the same.
+   b. Make sure to use another docker image tag instead of `armory/mysql-extra-lib` in the docker build command above
+   c. Make sure to download and delete the relevant jars in `Dockerfile` (ln 13)
+      ```
+      RUN rm -rf ./lib/liquibase-core-*.jar ./lib/mysql-connector-java-*.jar
+      RUN wget -P ./lib/ 'https://repo1.maven.org/maven2/mysql/mysql-connector-java/8.0.23/mysql-connector-java-8.0.23.jar' && \
+          wget -P ./lib/ 'https://repo1.maven.org/maven2/org/liquibase/liquibase-core/4.3.5/liquibase-core-4.3.5.jar'
 
-   b. Make sure to remove the specific jars you expect to not be there
-    ```
-    CLASSPATH=[.. ommitted ..]:$APP_HOME/lib/mysql-connector-java-8.0.20.jar:[.. ommitted ..]
-    ```
+      ```
 
-   c. Due to many factors (including k8s, security in containers, and how it detects the project root),
-     you will need to manually set variable APP_HOME.
-     Overwrite the final definition of APP_HOME
-     It should be around line 43 (search for _last_ result of `APP_HOME=`)
-    ```
-    APP_HOME=/opt/clouddriver
-    ```
+   d. There's the posibility that the CLASSPATH variable changed in the startup script require a specific order.
+      In case of problems make sure to compare against the original startup script in the base images.
 
-3. In `jarlibs.clouddriver-patch.yaml` line #20 we download our new dependency jars:
 
-  ```
-  cd /opt/clouddriver/extra-lib;
-  wget 'https://repo1.maven.org/maven2/mysql/mysql-connector-java/8.0.23/mysql-connector-java-8.0.23.jar'
-  ```
+2. In `jarlibs.clouddriver-patch.yaml`, include each deployment volumes and init containers for each updated service:
+   ```
+   kustomize:
+     clouddriver:
+       deployment:
+         patchesStrategicMerge:
+           - |
+             spec:
+               template:
+                 spec:
+                   initContainers:
+                     - name: mysql-extra-lib-init
+                       image: armory/mysql-extra-lib:clouddriver-2.26.6
+                       volumeMounts:
+                         - mountPath: /target/extra-lib
+                           name: extra-lib-vol
+                   containers:
+                     - name: clouddriver
+                       volumeMounts:
+                         - mountPath: /opt/clouddriver/lib
+                           name: extra-lib-vol
+                         - mountPath: /opt/clouddriver/bin
+                           name: extra-lib-vol
+                   volumes:
+                     - name: extra-lib-vol
+                       emptyDir: {}
+     orca:
+       deployment:
+         patchesStrategicMerge:
+           - |
+             spec:
+               template:
+                 spec:
+                   initContainers:
+                     - name: mysql-extra-lib-init
+                       image: armory/mysql-extra-lib:orca-2.26.12
+                       volumeMounts:
+                         - mountPath: /target/extra-lib
+                           name: extra-lib-vol
+                   containers:
+                     - name: orca
+                       volumeMounts:
+                         - mountPath: /opt/orca/lib
+                           name: extra-lib-vol
+                         - mountPath: /opt/orca/bin
+                           name: extra-lib-vol
+                   volumes:
+                     - name: extra-lib-vol
+                       emptyDir: {}
+   ```
+

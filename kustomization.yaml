@@ -2,9 +2,7 @@ namespace: spinnaker
 
 resources:
   - spinnakerservice.yaml
-  - clouddriver-custom-startup-script.cm.yaml
   - others.yaml
-
 
 patchesStrategicMerge:
   - jarlibs.clouddriver-patch.yaml
