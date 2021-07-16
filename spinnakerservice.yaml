@@ -39,18 +39,18 @@ spec:
           connectionPools:
             default:
               default: true
-              jdbcUrl: jdbc:mysql://mysql:3306/clouddriver
-              password: encrypted:k8s!n:spin-secrets!k:mysqlCdPassword
-              user: clouddriver_service
+              jdbcUrl: jdbc:mysql://mysql:3306/orca
+              password: encrypted:k8s!n:spin-secrets!k:mysqlOrcaPassword
+              user: orca_service
             tasks:
-              jdbcUrl: jdbc:mysql://mysql:3306/clouddriver
-              password: encrypted:k8s!n:spin-secrets!k:mysqlCdPassword
-              user: clouddriver_service
+              jdbcUrl: jdbc:mysql://mysql:3306/orca
+              password: encrypted:k8s!n:spin-secrets!k:mysqlOrcaPassword
+              user: orca_service
           enabled: true
           migration:
-            jdbcUrl: jdbc:mysql://mysql:3306/clouddriver
-            password: encrypted:k8s!n:spin-secrets!k:mysqlCdMigratePassword
-            user: clouddriver_migrate
+            jdbcUrl: jdbc:mysql://mysql:3306/orca
+            password: encrypted:k8s!n:spin-secrets!k:mysqlOrcaMigratePassword
+            user: orca_migrate
           scheduler:
             enabled: false
           taskRepository:
