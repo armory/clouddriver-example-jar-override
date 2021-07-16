@@ -30,6 +30,32 @@ spec:
           primaryAccount: spinnaker
       version: 2.26.0
     profiles:
+      orca:
+        sql:
+          cache:
+            enabled: true
+            readBatchSize: 500
+            writeBatchSize: 300
+          connectionPools:
+            default:
+              default: true
+              jdbcUrl: jdbc:mysql://mysql:3306/clouddriver
+              password: encrypted:k8s!n:spin-secrets!k:mysqlCdPassword
+              user: clouddriver_service
+            tasks:
+              jdbcUrl: jdbc:mysql://mysql:3306/clouddriver
+              password: encrypted:k8s!n:spin-secrets!k:mysqlCdPassword
+              user: clouddriver_service
+          enabled: true
+          migration:
+            jdbcUrl: jdbc:mysql://mysql:3306/clouddriver
+            password: encrypted:k8s!n:spin-secrets!k:mysqlCdMigratePassword
+            user: clouddriver_migrate
+          scheduler:
+            enabled: false
+          taskRepository:
+            enabled: true
+
       clouddriver:
         redis:
           cache:
